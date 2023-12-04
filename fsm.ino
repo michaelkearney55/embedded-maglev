@@ -23,17 +23,8 @@ void setup() {
   
 void loop() {
   if (Serial.available() > 0) {
-    // Read the incoming data as a string
-    String inputString = Serial.readStringUntil('\n');
-
-    // Split the string by comma
-    int commaIndex = inputString.indexOf(',');
-    String speedString = inputString.substring(0, commaIndex);
-    String brakeString = inputString.substring(commaIndex + 1);
-
-    // Convert the split strings into integers
-    speedReading = speedString.toInt();
-    brake = brakeString.toInt() == 1;
+    // Read the dummy inputs
+    readInputs();
 
     // Update the FSM
     currentState = updateFSM(currentState, speedReading, brake);
@@ -41,6 +32,17 @@ void loop() {
     // Print the current status
     printStatus();
   }
+}
+
+void readInputs() {
+  String inputString = Serial.readStringUntil('\n');
+
+  int commaIndex = inputString.indexOf(',');
+  String speedString = inputString.substring(0, commaIndex);
+  String brakeString = inputString.substring(commaIndex + 1);
+
+  speedReading = speedString.toInt();
+  brake = brakeString.toInt() == 1;
 }
 
 void printStatus() {
