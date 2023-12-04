@@ -13,7 +13,8 @@ State currentState = STOP;
 // Global variables for train's status
 int currentSpeed;
 int speedReading;
-bool brake = 0;
+int currentBrake;
+int brakeReading;
 
 void setup() {
   setUpMotors();
@@ -27,7 +28,7 @@ void loop() {
     readInputs();
 
     // Update the FSM
-    currentState = updateFSM(currentState, speedReading, brake);
+    currentState = updateFSM(currentState, speedReading, brakeReading);
 
     // Print the current status
     printStatus();
@@ -42,7 +43,7 @@ void readInputs() {
   String brakeString = inputString.substring(commaIndex + 1);
 
   speedReading = speedString.toInt();
-  brake = brakeString.toInt() == 1;
+  brakeReading = brakeString.toInt();
 }
 
 void printStatus() {
@@ -64,11 +65,11 @@ void printStatus() {
   Serial.print(", Current Speed: ");
   Serial.print(currentSpeed);
   Serial.print(", Brake: ");
-  Serial.println(brake ? "ON" : "OFF");
+  Serial.println(currentBrake ? "ON" : "OFF");
 }
 
 
-State updateFSM(State currentState, int speedReading, bool brake) {
+State updateFSM(State currentState, int speedReading, bool brakeReading) {
   // next state to return
   State nextState;
 
@@ -76,17 +77,19 @@ State updateFSM(State currentState, int speedReading, bool brake) {
     case STOP:
       // the current speed reading is positive and brake is not being pressed
       // Transition 1 - 2
-      if (speedReading > 0 && !brake) {
+      if (speedReading > 0 && brakeReading == 0) {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
+        currentBrake = brakeReading;
         nextState = FORWARD;
       }
 
       // the current speed reading is negative and brake is not being pressed
       // Transition 1 - 3
-      else if (speedReading < 0 && !brake) {
+      else if (speedReading < 0 && brakeReading == 0) {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
+        currentBrake = brakeReading;
         nextState = BACKWARD;
       }
       // the current speed reading is zero or brake is being pressed
@@ -94,6 +97,7 @@ State updateFSM(State currentState, int speedReading, bool brake) {
       else {
         setMotorSpeed(0);
         currentSpeed = 0;
+        currentBrake = brakeReading;
         nextState = STOP;
       }
 
@@ -102,9 +106,10 @@ State updateFSM(State currentState, int speedReading, bool brake) {
     case FORWARD:
       // the brake is being pressed or the speedReading is set to zero
       // Trainsition 2 - 1
-      if (brake || speedReading == 0) {
+      if (brakeReading != 0 || speedReading == 0) {
         setMotorSpeed(0);
         currentSpeed = 0;
+        currentBrake = brakeReading;
         nextState = STOP;
       }
       // the brake is not being pressed and the speedReading is positive
@@ -112,6 +117,7 @@ State updateFSM(State currentState, int speedReading, bool brake) {
       else if (speedReading > 0) {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
+        currentBrake = brakeReading;
         nextState = FORWARD;
       }
       // the brake is not being pressed and the speedReading is negative
@@ -119,6 +125,7 @@ State updateFSM(State currentState, int speedReading, bool brake) {
       else {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
+        currentBrake = brakeReading;
         nextState = BACKWARD;
       }
       
@@ -127,9 +134,10 @@ State updateFSM(State currentState, int speedReading, bool brake) {
     case BACKWARD:
       // the brake is being pressed or the speedReading is set to zero
       // Trainsition 3 - 1
-      if (brake || speedReading == 0) {
+      if (brakeReading != 0 or speedReading == 0) {
         setMotorSpeed(0);
         currentSpeed = 0;
+        currentBrake = brakeReading;
         nextState = STOP;
       }
       // the brake is not being pressed and the speedReading is positive
@@ -137,6 +145,7 @@ State updateFSM(State currentState, int speedReading, bool brake) {
       else if (speedReading > 0) {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
+        currentBrake = brakeReading;
         nextState = FORWARD;
       }
       // the brake is not being pressed and the speedReading is negative
@@ -144,6 +153,7 @@ State updateFSM(State currentState, int speedReading, bool brake) {
       else {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
+        currentBrake = brakeReading;
         nextState = BACKWARD;
       }
       
