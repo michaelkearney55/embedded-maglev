@@ -1,4 +1,5 @@
 #include "train_motor.h"
+#include "watch_dog.h"
 
 // 3 states: stop, foward, and backward
 enum State {
@@ -16,9 +17,24 @@ int speedReading;
 int currentBrake;
 int brakeReading;
 
+// Interrupt button pin
+const byte ISRPin = A2;
+
 void setup() {
+  // set up interrupt button
+  pinMode(ISRPin, INPUT_PULLUP);
+
+  // set up the interrupt service
+  attachInterrupt(digitalPinToInterrupt(ISRPin), buttonISR, CHANGE);
+
+  // set up the pins for controlling the motors
   setUpMotors();
-  Serial.begin(9600);  // Initialize serial communication
+
+  // set up the watch dog timer
+  setUpWDT();
+
+  // Initialize serial communication
+  Serial.begin(9600);  
 }
 
   
@@ -33,6 +49,10 @@ void loop() {
     // Print the current status
     printStatus();
   }
+
+  // Pet the watch dog
+  // Can remove this line to test the functionality of watch dog timer
+  petWDT();
 }
 
 void readInputs() {
@@ -163,3 +183,13 @@ State updateFSM(State currentState, int speedReading, bool brakeReading) {
   return nextState;
 }
 
+// ISR handler for when interrupts are triggered
+void buttonISR() {
+  if (digitalRead(ISRPin) == HIGH) {
+    Serial.println("ISR triggered. Train stopping.");
+
+    // stops the train and update the current state
+    setMotorSpeed(0);
+    currentState = STOP;
+  }
+}
