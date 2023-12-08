@@ -1,83 +1,120 @@
 #include <SPI.h>
 #include <WiFi101.h>
 #include "arduino_secrets.h" 
+#include "utility.h"
 #include "wifi-status.h" 
-// #include <WiFi.h>
+#include "fsm.h" 
 
+State test;
 
-#define IS_SERVER true
+#define MOCK_WIFI true
+#define IS_SERVER false
+#define TESTING false
+
+unsigned long lastConnectionTime = 0;            // last time you connected to the server, in milliseconds
+const unsigned long postingInterval = 1L * 1000L; // delay between updates, in milliseconds
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 int status = WL_IDLE_STATUS;     // the WiFi radio's status
+int potentiometer = 10;
 
 WiFiServer server(80);
 WiFiClient client;
+IPAddress a_server(172,18,135,234);
 
-char a_server[] = "";
 
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  // wait for serial port to connect. Needed for native USB port only
+  while (!Serial) {;}
 
-  // check for the presence of the shield:
-  if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present");
-    // don't continue:
-    while (true);
-  }
 
-  // attempt to connect to WiFi network:
-  while ( status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to open SSID: ");
-    Serial.println(ssid);
-    status = WiFi.begin(ssid);
+  // set up interrupt button
+  pinMode(ISRPin, INPUT_PULLUP);
 
-    // wait 10 seconds for connection:
-    delay(10000);
-  }
+  // set up the interrupt service
+  attachInterrupt(digitalPinToInterrupt(ISRPin), buttonISR, CHANGE);
 
-  // you're connected now, so print out the data:
-  Serial.print("You're connected to the network");
-  printCurrentNet();
-  printWiFiData();
+  // set up the pins for controlling the motors
+  setUpMotors();
 
-  Serial.print("Connected to wifi. My address:");
-  IPAddress myAddress = WiFi.localIP();
-  Serial.println(myAddress);
-  
-  if (IS_SERVER) {
-    server.begin();
+  // set up the watch dog timer
+  setUpWDT();
+
+  if (!MOCK_WIFI) {
+    connectToWifi(ssid, &status);
+
+    if (IS_SERVER) {
+      server.begin();
+    }
   }
   else {
-
+    Serial.println("Mock wifi connection established, use serial monitor to input values");
   }
 }
+
+
+// this method makes a HTTP connection to the server:
+void sendHttpRequest() {
+
+  // client.stop();
+  // if there's a successful connection:
+  // Serial.println("attempting to connect");
+  if (client.connect(a_server, 80)) {
+
+    Serial.println("connection completed");
+    potentiometer += 1; // TODO log potentiometer values
+    client.println(String(potentiometer)); // send potentiometer values to server
+    lastConnectionTime = millis();
+  }
+  else { // if you couldn't make a connection:
+    // Serial.println("connection failed");
+  }
+}
+
 void loop() {
   // check the network connection once every 10 seconds:
   // delay(5000);
   // printCurrentNet();
 
-  delay(500);
-  if (IS_SERVER) {
-    WiFiClient a_client = server.available();
-    if (a_client && a_client.connected()) {
-      String request = a_client.readStringUntil('\n');
-      Serial.println(request);
-      a_client.print("response\n");
-      a_client.stop();
-    }
+  if (TESTING){
+      testAllTests();
+      delay(2000);
+  }
+  else if (MOCK_WIFI && Serial.available() > 0) {
+    // Read the dummy inputs
+    String inputString = Serial.readStringUntil('\n');
+    readInputs(inputString);
+    // Update the FSM
+    currentState = updateFSM(currentState, speedReading, brakeReading);
+    // Print the current status
+    printStatus();
   }
   else {
-          // Make a HTTP request:
-
-    if (client.connect(a_server, 80)) {
-      Serial.println("connected");
-      client.println("hello");
+    if (IS_SERVER) {
+      WiFiClient a_client = server.available();
+      if (a_client) {
+        Serial.println("new client");
+        while (a_client.connected()) {
+          if (a_client.available()) {
+            String request = a_client.readStringUntil('\n');
+            readInputs(request); // RECEIVED POTENTIOMETER VALUE, update for FSM
+            currentState = updateFSM(currentState, speedReading, brakeReading);
+            printStatus();
+          }
+        }
+      }
     }
+    else { // is client
+      if (millis() - lastConnectionTime > postingInterval) {
+        sendHttpRequest();
+      }
+    }
+    delay(1);
   }
 
+  // Can remove this line to test the functionality of watch dog timer
+  petWDT();  // Pet the watch dog
 }

@@ -1,8 +1,7 @@
-#include "utility.h"
+// #include "utility.h"
 #include "train_motor.h"
 #include "watch_dog.h"
 
-#define TESTING false
 
 // 3 states: stop, foward, and backward
 // enum State {
@@ -34,28 +33,7 @@ void buttonISR() {
   }
 }
 
-
-
-/*        
- * Helper function for printing states
- */
-char* s2str(State s) {
-  switch(s) {
-    case STOP:
-    return "(1) STOP";
-    case FORWARD:
-    return "(2) FORWARD";
-    case BACKWARD:
-    return "(3) BACKWARD";
-    default:
-    return "???";
-  }
-}
-
-
-void readInputs() {
-  String inputString = Serial.readStringUntil('\n');
-
+void readInputs(String inputString) {
   int commaIndex = inputString.indexOf(',');
   String speedString = inputString.substring(0, commaIndex);
   String brakeString = inputString.substring(commaIndex + 1);
@@ -227,47 +205,31 @@ void testAllTests() {
 }
 
 
-void setup() {
-  // set up interrupt button
-  pinMode(ISRPin, INPUT_PULLUP);
-
-  // set up the interrupt service
-  attachInterrupt(digitalPinToInterrupt(ISRPin), buttonISR, CHANGE);
-
-  // set up the pins for controlling the motors
-  setUpMotors();
-
-  // set up the watch dog timer
-  setUpWDT();
-
-  // Initialize serial communication
-  Serial.begin(9600);  
-}
+// void setup() {
+//   // Initialize serial communication
+//   Serial.begin(9600);  
+// }
 
   
-void loop() {
-  if (TESTING){
-      testAllTests();
-      delay(2000);
-  }
-  else if (Serial.available() > 0) {
-    // Read the dummy inputs
+// void loop() {
+//   if (TESTING){
+//       testAllTests();
+//       delay(2000);
+//   }
+//   else if (Serial.available() > 0) {
+//     // Read the dummy inputs
 
-    if (TESTING){
-    		testAllTests();
-    }
-    else {
-      readInputs();
-    // Update the FSM
-      currentState = updateFSM(currentState, speedReading, brakeReading);
-    }
 
-    // Print the current status
-    printStatus();
-  }
+//     readInputs();
+//     // Update the FSM
+//     currentState = updateFSM(currentState, speedReading, brakeReading);
 
-  // Pet the watch dog
-  // Can remove this line to test the functionality of watch dog timer
-  petWDT();
-}
+//     // Print the current status
+//     printStatus();
+//   }
+
+//   // Pet the watch dog
+//   // Can remove this line to test the functionality of watch dog timer
+//   petWDT();
+// }
 

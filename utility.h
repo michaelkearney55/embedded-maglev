@@ -12,3 +12,18 @@ const int testInputSpeed[8] = {-1, 1023, 0, 512, -1, 1000, -1, 10};
 const bool testInputBrake[8] = {true, false, false, false, true, false, true, false};
 const int testStartSpeedVar[8] = {0, 0, 0, 255, -1, 255, -1, 0};
 const int testEndSpeedVar[8] = {0, 255, -255, 0, 0, 244, 0, -250};
+/*        
+ * Helper function for printing states
+ */
+char* s2str(State s) {
+  switch(s) {
+    case STOP:
+    return "(1) STOP";
+    case FORWARD:
+    return "(2) FORWARD";
+    case BACKWARD:
+    return "(3) BACKWARD";
+    default:
+    return "???";
+  }
+}

@@ -60,4 +60,32 @@ void printCurrentNet() {
   Serial.println(encryption, HEX);
 }
 
+void connectToWifi(char *ssid, int *status) {
+    // check for the presence of the shield:
+  if (WiFi.status() == WL_NO_SHIELD) {
+    Serial.println("WiFi shield not present");
+    // don't continue:
+    while (true);
+  }
+
+  // attempt to connect to WiFi network:
+  while (*status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to open SSID: ");
+    Serial.println(ssid);
+    *status = WiFi.begin(ssid);
+
+    // wait 10 seconds for connection:
+    delay(10000);
+  }
+
+  // you're connected now, so print out the data:
+  Serial.print("You're connected to the network");
+  printCurrentNet();
+  printWiFiData();
+
+  Serial.print("Connected to wifi. My address:");
+  IPAddress myAddress = WiFi.localIP();
+  Serial.println(myAddress);
+
+}
 
