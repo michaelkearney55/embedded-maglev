@@ -1,5 +1,6 @@
 #include "train.h"
 #include "watch_dog.h"
+#include "motor.h"
 
 #define TESTING
 
@@ -30,23 +31,33 @@ void SERCOM4_Handler() {
 
       // We received a message. Handle the message
       if (maskBrake(b)) {
-        writeHBridgeOff();
+        analogWrite(enA, 0);
+        analogWrite(enB, 0);
         writeLights(false, true, false, true); // red lights
       } else {
-        writeHBridgeDirection(maskDirection(b));
+        //writeHBridgeDirection(maskDirection(b));
         if (maskDirection(b)) {
+          digitalWrite(in1, HIGH);
+          digitalWrite(in2, LOW);
+          digitalWrite(in3, HIGH);
+          digitalWrite(in4, LOW);
           writeLights(true, false, false, true); // forward lights
         } else {
+          digitalWrite(in1, LOW);
+          digitalWrite(in2, HIGH);
+          digitalWrite(in3, LOW);
+          digitalWrite(in4, HIGH);
           writeLights(false, true, true, false); // forward lights
         }
+        int speed = speedToDAC((int) maskSpeed(b));
+        analogWrite(enA, speed);
+        analogWrite(enB, speed);
       }
-      //analogWrite(motorPin, speedToDAC((int) maskSpeed(b)));
 
       // Write the speed value to the DAC motor controller
       // Even if brake is enabled, write to DAC so we're ready when brake disabled
       // PET WATCHDOG
-      //WDT->CLEAR.reg = 0xA5;
-      //counter++;
+      // WDT->CLEAR.reg = 0xA5;
 
       // clear interrupt register
       SERCOM4->USART.INTFLAG.bit.RXC = 1;
@@ -76,10 +87,11 @@ void setup() {
   digitalWrite(bWhiteLEDPin, LOW);
   digitalWrite(bRedLEDPin, LOW);
 
-  // Set up motor and H Bridge
-  pinMode(motorPin, OUTPUT);
-  pinMode(hb1Pin, OUTPUT);
-  pinMode(hb2Pin, OUTPUT);
+  // // Set up motor and H Bridge
+  // pinMode(motorPin, OUTPUT);
+  // pinMode(hb1Pin, OUTPUT);
+  // pinMode(hb2Pin, OUTPUT);
+  setUpMotors();
 
   // Turn off motors - Initial state
   //output((byte) B10000000);

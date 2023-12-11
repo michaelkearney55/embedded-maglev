@@ -16,7 +16,7 @@ const uint8_t PIN_TX_PORT_PIN = 10;
 const SercomUartTXPad PAD_TX = UART_TX_PAD_2;
 
 // Status Pin
-const int PIN_STATUS = 10;
+const int PIN_STATUS = A6;
 
 // LED Pins
 const int aWhiteLEDPin = 0;
