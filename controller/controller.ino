@@ -34,9 +34,12 @@ void setup() {
   Serial.print("Set pin modes.\n");
   #endif
 
+  // // trigger button flags on button press
+  // attachInterrupt(brakePin, flagBrake, RISING);
+  // attachInterrupt(allclearPin, flagAllclear, RISING);
+
   // trigger button flags on button press
-  attachInterrupt(brakePin, flagBrake, RISING);
-  attachInterrupt(allclearPin, flagAllclear, RISING);
+  attachInterrupt(brakePin, flagBrake, CHANGE);
 
   #ifdef DEBUG
   Serial.print("Attached interrupts to button pins.\n");
@@ -222,14 +225,31 @@ void updateInputs() {
   knob = analogRead(knobPin);
 }
 
+// /**
+//  *  flagBrake is an ISR that turns on the brakeFlag
+//  */
+// void flagBrake() {
+//   brakeFlag = true;
+//   #if TESTING_MODE == 0 || defined(DEBUG)
+//   Serial.println("Brake pressed.");
+//   #endif
+// }
+
 /**
  *  flagBrake is an ISR that turns on the brakeFlag
  */
 void flagBrake() {
-  brakeFlag = true;
-  #if TESTING_MODE == 0 || defined(DEBUG)
-  Serial.println("Brake pressed.");
-  #endif
+  if(digitalRead(brakePin) == HIGH) {
+    brakeFlag = true;
+    #if TESTING_MODE == 0 || defined(DEBUG)
+    Serial.println("Brake active.");
+    #endif
+  } else {
+    brakeFlag = false;
+    #if TESTING_MODE == 0 || defined(DEBUG)
+    Serial.println("Brake inactive.");
+    #endif
+  }
 }
 
 /**
