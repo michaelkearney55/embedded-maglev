@@ -21,6 +21,10 @@ int brakeReading;
 const byte ISRPin = A2;
 
 void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+  while(!Serial);
+
   // set up interrupt button
   pinMode(ISRPin, INPUT_PULLUP);
 
@@ -33,8 +37,7 @@ void setup() {
   // set up the watch dog timer
   setUpWDT();
 
-  // Initialize serial communication
-  Serial.begin(9600);  
+  
 }
 
   
@@ -97,7 +100,7 @@ State updateFSM(State currentState, int speedReading, bool brakeReading) {
     case STOP:
       // the current speed reading is positive and brake is not being pressed
       // Transition 1 - 2
-      if (speedReading > 0 && brakeReading == 0) {
+      if (speedReading > 0 && !brakeReading) {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
         currentBrake = brakeReading;
@@ -106,7 +109,7 @@ State updateFSM(State currentState, int speedReading, bool brakeReading) {
 
       // the current speed reading is negative and brake is not being pressed
       // Transition 1 - 3
-      else if (speedReading < 0 && brakeReading == 0) {
+      else if (speedReading < 0 && !brakeReading) {
         setMotorSpeed(speedReading);
         currentSpeed = speedReading;
         currentBrake = brakeReading;
@@ -116,7 +119,7 @@ State updateFSM(State currentState, int speedReading, bool brakeReading) {
       // Transition 1 - 1
       else {
         setMotorSpeed(0);
-        currentSpeed = 0;
+        currentSpeed = speedReading;
         currentBrake = brakeReading;
         nextState = STOP;
       }
@@ -128,7 +131,7 @@ State updateFSM(State currentState, int speedReading, bool brakeReading) {
       // Trainsition 2 - 1
       if (brakeReading != 0 || speedReading == 0) {
         setMotorSpeed(0);
-        currentSpeed = 0;
+        currentSpeed = speedReading;
         currentBrake = brakeReading;
         nextState = STOP;
       }
@@ -156,7 +159,7 @@ State updateFSM(State currentState, int speedReading, bool brakeReading) {
       // Trainsition 3 - 1
       if (brakeReading != 0 or speedReading == 0) {
         setMotorSpeed(0);
-        currentSpeed = 0;
+        currentSpeed = speedReading;
         currentBrake = brakeReading;
         nextState = STOP;
       }
