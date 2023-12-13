@@ -72,9 +72,10 @@ void SERCOM4_Handler() {
 
 void setup() {
 
-
+  #ifdef TESTING
   Serial.begin(9600);
   while(!Serial);
+  #endif
 
   // Set up onboard LEDs
   pinMode(aWhiteLEDPin, OUTPUT);
@@ -121,11 +122,12 @@ void setup() {
 
   // Set up status pin
   pinMode(PIN_STATUS, INPUT);
+  pinMode(PIN_BT_POWER, OUTPUT);
+  digitalWrite(PIN_BT_POWER, HIGH);
 
   // Initial state
 
   writeLights(true, true, true, true);
-  writeHBridge(false, false); // turn off motors
 
   // hold for initial connection
   while(!(digitalRead(PIN_STATUS) == HIGH)) {
@@ -134,12 +136,14 @@ void setup() {
     toggle = !toggle;
     delay(100);
   }
+  #ifdef TESTING
   Serial.println("Connection Established");
+  #endif
 
   // TODO: add intial longer period
-  setUpWDT(); // enable WDT
+  //setUpWDT(); // enable WDT
   sercom4.enableUART(); // enable connection
-  enableWDT();
+  //enableWDT();
 }
 
 void loop() {
@@ -179,33 +183,4 @@ int inline speedToDAC(int speed) {
         speed = map(speed, 1, 63, MOTOR_MIN_OUT, MOTOR_MAX_OUT);
     }
     return speed;
-}
-
-void inline writeHBridge(bool p1, bool p2) {
-    digitalWrite(hb1Pin, p1 ? HIGH : LOW);
-    digitalWrite(hb2Pin, p2 ? HIGH : LOW);
-}
-
-void inline writeHBridgeOff() {
-    writeHBridge(false, false);
-}
-
-void inline writeHBridgeDirection(bool forward) {
-    writeHBridge(forward, !forward);
-}
-
-/**
- * Sets the motors according to an encoded byte
-*/
-void inline setMotors(byte b) {
-    // if not braked, enables and sets direction of h bridge
-    if (maskBrake(b)) {
-        writeHBridgeOff();
-    } else {
-        writeHBridgeDirection(maskDirection(b));
-    }
-
-    // Write the speed value to the DAC motor controller
-    // Even if brake is enabled, write to DAC so we're ready when brake disabled
-    analogWrite(motorPin, speedToDAC((int) maskSpeed(b)));
 }

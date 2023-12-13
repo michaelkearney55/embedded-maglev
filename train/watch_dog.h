@@ -33,8 +33,9 @@ void enableWDT() {
 
 void WDT_Handler() {
   WDT->INTFLAG.reg = WDT_INTFLAG_EW;
-
+  #ifdef TESTING
   Serial.println("Watchdog reset might happen");
+  #endif
 }
 
 void petWDT () {

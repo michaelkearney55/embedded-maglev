@@ -17,22 +17,13 @@ const SercomUartTXPad PAD_TX = UART_TX_PAD_2;
 
 // Status Pin
 const int PIN_STATUS = A6;
+const int PIN_BT_POWER = A1;
 
 // LED Pins
 const int aWhiteLEDPin = 0;
 const int aRedLEDPin = 1;
 const int bWhiteLEDPin = 2;
 const int bRedLEDPin = 3;
-
-// Motor Pins
-const int motorPin = 9;
-const int hb1Pin = 7;
-const int hb2Pin = 8;
-
-// Motor Pins
-const int motor_testpin = A1;
-const int hb1_testpin = A2;
-const int hb2_testpin = A3;
 
 // raise minimum to least acceleration
 const int MOTOR_MIN_OUT = 130;
@@ -71,9 +62,6 @@ inline uint8_t maskSpeed(uint8_t b) {
     return b & 0x3f;
 }
 
-void inline writeHBridge(bool p1, bool p2);
-void inline writeHBridgeOff();
-void inline writeHBridgeDirection(bool forward);
 int inline speedToDAC(int speed);
 void inline writeMotorSpeed(int speed);
 void setMotors(byte b);
